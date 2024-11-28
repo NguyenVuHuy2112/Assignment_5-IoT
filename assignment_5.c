@@ -11,7 +11,7 @@
 #define DATA_INTERVAL 15
 #define BEACON_INTERVAL 8
 #define MAX_NODES 15
-#define PARENT_STRATEGY 2 // 1: HOP, 2: RSSI, 3: PRR
+#define PARENT_STRATEGY 3 // 1: HOP, 2: RSSI, 3: PRR
 
 typedef struct {
   uint8_t id;
@@ -98,9 +98,29 @@ static void update_parent() {
   parent_hop = 0xFFFF; // Reset parent hop to a large value
 
   for (int i = 0; i < neighbor_count; i++) {
-    if (neighbors[i].hop < parent_hop || (neighbors[i].hop == parent_hop && neighbors[i].rssi > neighbors[parent_id].rssi)) {
+    // Always prioritize nodes with hop = 1 (root or directly connected nodes)
+    if (neighbors[i].hop == 1) {
       parent_hop = neighbors[i].hop;
       parent_id = neighbors[i].id;
+      break;
+    }
+
+    // Otherwise, apply the selected parent strategy
+    if (PARENT_STRATEGY == 1) { // HOP-based strategy
+      if (neighbors[i].hop < parent_hop || (neighbors[i].hop == parent_hop && neighbors[i].rssi > neighbors[parent_id].rssi)) {
+        parent_hop = neighbors[i].hop;
+        parent_id = neighbors[i].id;
+      }
+    } else if (PARENT_STRATEGY == 2) { // RSSI-based strategy
+      if (neighbors[i].rssi > neighbors[parent_id].rssi) {
+        parent_hop = neighbors[i].hop;
+        parent_id = neighbors[i].id;
+      }
+    } else if (PARENT_STRATEGY == 3) { // PRR-based strategy
+      if (neighbors[i].prr > neighbors[parent_id].prr) {
+        parent_hop = neighbors[i].hop;
+        parent_id = neighbors[i].id;
+      }
     }
   }
 
@@ -110,6 +130,8 @@ static void update_parent() {
     printf("Node %d: No parent available\n", linkaddr_node_addr.u8[0]);
   }
 }
+
+
 
 PROCESS_THREAD(tree_routing_process, ev, data) {
   PROCESS_BEGIN();

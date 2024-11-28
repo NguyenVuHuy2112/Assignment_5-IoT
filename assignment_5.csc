@@ -245,14 +245,14 @@
     </plugin_config>
     <width>400</width>
     <z>0</z>
-    <height>573</height>
+    <height>431</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
-      <filter>ID:3</filter>
+      <filter>ID:10</filter>
       <formatted_time />
       <coloring />
     </plugin_config>
